@@ -1,0 +1,316 @@
+<!-- templates/cart/view_cart.html -->
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cart-container {
+        padding: 40px 0;
+        min-height: 70vh;
+    }
+
+    .cart-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: white;
+        transition: box-shadow 0.3s;
+    }
+
+    .cart-item:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .cart-item-image {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .quantity-btn {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        border: 1px solid #ddd;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .quantity-btn:hover {
+        background: #f5f5f5;
+    }
+
+    .quantity-input {
+        width: 50px;
+        text-align: center;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 5px;
+    }
+
+    .cart-summary {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 10px;
+        padding: 30px;
+        position: sticky;
+        top: 100px;
+    }
+
+    .empty-cart {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-cart-icon {
+        font-size: 5rem;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+
+    .product-type-badge {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+
+    .badge-wildlife { background: #D4EDDA; color: #155724; }
+    .badge-safari { background: #D1ECF1; color: #0C5460; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-container">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-6 fw-bold text-dark">Shopping Cart</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                        <li class="breadcrumb-item active">Cart</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        {% if items %}
+        <div class="row">
+            <!-- Cart Items -->
+            <div class="col-lg-8">
+                {% for item in items %}
+                <div class="cart-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <img src="{{ url_for('static', filename='uploads/' + item.product.image_url) if item.product.image_url else (url_for('static', filename='images/default-wildlife.jpg') if item.cart_item.product_type == 'wildlife' else url_for('static', filename='images/default-safari.jpg')) }}"
+                                 class="cart-item-image" alt="{{ item.product.title if item.cart_item.product_type == 'wildlife' else item.product.name }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <span class="product-type-badge badge-{{ item.cart_item.product_type }}">
+                                    {{ item.cart_item.product_type|title }}
+                                </span>
+                            </div>
+                            <h5 class="fw-bold mb-1">
+                                {% if item.cart_item.product_type == 'wildlife' %}
+                                    {{ item.product.title }}
+                                {% else %}
+                                    {{ item.product.name }}
+                                {% endif %}
+                            </h5>
+
+                            <p class="text-muted mb-2 small">
+                                {% if item.cart_item.product_type == 'wildlife' %}
+                                    {{ item.product.description[:100] }}...
+                                {% else %}
+                                    {{ item.product.description[:100] if item.product.description else 'Safari Package' }}...
+                                {% endif %}
+                            </p>
+
+                            <div class="text-success fw-bold h5 mb-0">
+                                ₹ {{ "{:,.2f}".format(item.total) }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="quantity-control mb-3">
+                                <form method="POST" action="{{ url_for('update_cart_item', item_id=item.cart_item.id) }}" class="d-inline">
+                                    <input type="hidden" name="action" value="decrease">
+                                    <button type="submit" class="quantity-btn"
+                                            {% if item.cart_item.quantity <= 1 %}disabled{% endif %}>
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </form>
+
+                                <span class="quantity-input">{{ item.cart_item.quantity }}</span>
+
+                                <form method="POST" action="{{ url_for('update_cart_item', item_id=item.cart_item.id) }}" class="d-inline">
+                                    <input type="hidden" name="action" value="increase">
+                                    <button type="submit" class="quantity-btn">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <form method="POST" action="{{ url_for('update_cart_item', item_id=item.cart_item.id) }}">
+                                <input type="hidden" name="action" value="remove">
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                    <i class="fas fa-trash me-1"></i>Remove
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('wildlife_gallery') }}" class="btn btn-outline-dark">
+                        <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                    </a>
+
+                    <form method="POST" action="{{ url_for('view_cart') }}">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-sync-alt me-2"></i>Update Cart
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="cart-summary">
+                    <h4 class="fw-bold mb-4">Order Summary</h4>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal</span>
+                            <span>₹ {{ "{:,.2f}".format(total) }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping</span>
+                            <span class="text-success">FREE</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax (18%)</span>
+                            <span>₹ {{ "{:,.2f}".format(total * 0.18) }}</span>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between fw-bold fs-5">
+                            <span>Total</span>
+                            <span class="text-success">₹ {{ "{:,.2f}".format(total * 1.18) }}</span>
+                        </div>
+
+                        <small class="text-muted">Including all taxes</small>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{{ url_for('checkout') }}" class="btn btn-success btn-lg w-100 py-3">
+                            <i class="fas fa-lock me-2"></i>Proceed to Checkout
+                        </a>
+
+                        <p class="text-center text-muted small mt-3">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Secure payment · 100% Satisfaction Guarantee
+                        </p>
+                    </div>
+
+                    <div class="mt-4">
+                        <h6 class="fw-bold mb-3">Accepted Payment Methods</h6>
+                        <div class="d-flex gap-2">
+                            <i class="fab fa-cc-visa fa-2x text-primary"></i>
+                            <i class="fab fa-cc-mastercard fa-2x text-danger"></i>
+                            <i class="fab fa-cc-amex fa-2x text-info"></i>
+                            <i class="fab fa-cc-paypal fa-2x text-primary"></i>
+                            <i class="fas fa-university fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-cart">
+            <div class="empty-cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h3 class="text-muted mb-3">Your cart is empty</h3>
+            <p class="text-muted mb-4">Looks like you haven't added any items to your cart yet.</p>
+            <a href="{{ url_for('wildlife_gallery') }}" class="btn btn-success btn-lg">
+                <i class="fas fa-paw me-2"></i>Explore Wildlife
+            </a>
+            <a href="{{ url_for('safari_packages') }}" class="btn btn-outline-success btn-lg ms-3">
+                <i class="fas fa-binoculars me-2"></i>View Safaris
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Update cart count
+    function updateCartCount() {
+        $.get('{{ url_for("view_cart") }}', function(data) {
+            // Extract count from page or make API call
+            const count = {{ items|length if items else 0 }};
+            $('#cartCount').text(count);
+        });
+    }
+
+    // Handle quantity changes via AJAX
+    $('.quantity-btn').click(function(e) {
+        e.preventDefault();
+        const form = $(this).closest('form');
+        const action = form.find('input[name="action"]').val();
+
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                location.reload();
+            },
+            error: function() {
+                showAlert('Error updating cart', 'danger');
+            }
+        });
+    });
+
+    function showAlert(message, type) {
+        const alertDiv = $(`
+            <div class="alert alert-${type} alert-dismissible fade show"
+                 style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+
+        $('body').append(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.alert('close');
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

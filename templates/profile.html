@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        padding: 40px 0;
+        min-height: 70vh;
+    }
+    
+    .profile-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .profile-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #1a472a 0%, #2e7d32 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin: 0 auto 15px;
+    }
+    
+    .order-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: all 0.3s;
+    }
+    
+    .order-card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .order-status {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    
+    .status-pending { background: #FFF3CD; color: #856404; }
+    .status-completed { background: #D4EDDA; color: #155724; }
+    .status-failed { background: #F8D7DA; color: #721C24; }
+    
+    .empty-orders {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2">{{ current_user.email }}</h3>
+                        <p class="text-muted">Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+                    </div>
+                    
+                    <div class="profile-info">
+                        <h5 class="fw-bold mb-3">Account Details</h5>
+                        <div class="mb-3">
+                            <label class="text-muted small">Email Address</label>
+                            <p class="fw-bold">{{ current_user.email }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="text-muted small">Account Type</label>
+                            <p class="fw-bold">
+                                {% if current_user.is_admin %}
+                                <span class="badge bg-danger">Administrator</span>
+                                {% else %}
+                                <span class="badge bg-success">Regular User</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="text-muted small">Member Since</label>
+                            <p class="fw-bold">{{ current_user.created_at.strftime('%d %B, %Y') }}</p>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-8">
+                <div class="profile-card">
+                    <h3 class="fw-bold mb-4">My Orders</h3>
+                    
+                    {% if orders %}
+                    <div class="orders-list">
+                        {% for order in orders %}
+                        <div class="order-card">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="fw-bold mb-1">Order #{{ order.id }}</h5>
+                                    <small class="text-muted">{{ order.created_at.strftime('%d %B, %Y %I:%M %p') }}</small>
+                                </div>
+                                <div>
+                                    <span class="order-status status-{{ order.payment_status }}">
+                                        {{ order.payment_status|title }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <strong>Amount:</strong> ₹ {{ "{:,.2f}".format(order.total_amount) }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>Items:</strong> {{ order.items|length if order.items else 'N/A' }}
+                                </div>
+                            </div>
+                            
+                            {% if order.shipping_address %}
+                            <div class="mt-2">
+                                <strong>Shipping:</strong> 
+                                <small class="text-muted">{{ order.shipping_address }}</small>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mt-3">
+                                <a href="{{ url_for('order_summary') }}?order_id={{ order.id }}" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-orders">
+                        <div class="empty-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <h4 class="text-muted mb-3">No Orders Yet</h4>
+                        <p class="text-muted mb-4">You haven't placed any orders yet.</p>
+                        <a href="{{ url_for('wildlife_gallery') }}" class="btn btn-success">
+                            <i class="fas fa-paw me-2"></i>Explore Wildlife
+                        </a>
+                        <a href="{{ url_for('safari_packages') }}" class="btn btn-outline-success ms-2">
+                            <i class="fas fa-binoculars me-2"></i>View Safaris
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

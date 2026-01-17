@@ -1,0 +1,596 @@
+<!-- templates/admin/manage_safaris.html -->
+{% extends "base.html" %}
+
+{% block title %}Manage Safari Packages - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        margin-top: 20px;
+    }
+
+    .sidebar {
+        background: linear-gradient(180deg, #1a472a 0%, #2e7d32 100%);
+        min-height: calc(100vh - 76px);
+        padding: 0;
+        color: white;
+    }
+
+    .sidebar-header {
+        padding: 30px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+    }
+
+    .sidebar-nav {
+        padding: 20px 0;
+    }
+
+    .sidebar-nav .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+        padding: 12px 20px;
+        border-left: 3px solid transparent;
+        transition: all 0.3s;
+    }
+
+    .sidebar-nav .nav-link:hover,
+    .sidebar-nav .nav-link.active {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+        border-left-color: #4CAF50;
+    }
+
+    .sidebar-nav .nav-link i {
+        width: 25px;
+        text-align: center;
+    }
+
+    .safari-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s;
+        margin-bottom: 20px;
+    }
+
+    .safari-card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+
+    .safari-image {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .tier-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.85rem;
+    }
+
+    .premium { background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; }
+    .economical { background: linear-gradient(45deg, #4CAF50, #2E7D32); color: white; }
+    .standard { background: linear-gradient(45deg, #2196F3, #0D47A1); color: white; }
+
+    .action-buttons .btn {
+        padding: 5px 10px;
+        font-size: 0.85rem;
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+
+    .stats-badge {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .stats-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #1a472a;
+    }
+
+    .stats-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #1a472a 0%, #2e7d32 100%);
+        color: white;
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .add-safari-btn {
+        background: linear-gradient(135deg, #1a472a 0%, #2e7d32 100%);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+    }
+
+    .add-safari-btn:hover {
+        background: linear-gradient(135deg, #0d3b1e 0%, #1b5e20 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid admin-container">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar d-md-block">
+            <div class="sidebar-header">
+                <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Admin Panel</h4>
+                <small class="text-white-50">{{ current_user.email }}</small>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('manage_wildlife') }}">
+                            <i class="fas fa-paw me-2"></i>Manage Wildlife
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('manage_safaris') }}">
+                            <i class="fas fa-binoculars me-2"></i>Manage Safaris
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a class="nav-link text-warning" href="{{ url_for('index') }}">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Site
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 ms-sm-auto px-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2 text-dark">Manage Safari Packages</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSafariModal">
+                        <i class="fas fa-plus-circle me-2"></i>Add New Safari
+                    </button>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Stats Overview -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-badge">
+                        <div class="stats-number">{{ safaris|length }}</div>
+                        <div class="stats-label">Total Safaris</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-badge">
+                        <div class="stats-number">
+                            {% set premium_count = safaris|selectattr('tier', 'equalto', 'Premium')|list|length %}
+                            {{ premium_count }}
+                        </div>
+                        <div class="stats-label">Premium</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-badge">
+                        <div class="stats-number">
+                            {% set economical_count = safaris|selectattr('tier', 'equalto', 'Economical')|list|length %}
+                            {{ economical_count }}
+                        </div>
+                        <div class="stats-label">Economical</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-badge">
+                        <div class="stats-number">
+                            {% set standard_count = safaris|selectattr('tier', 'equalto', 'Standard')|list|length %}
+                            {{ standard_count }}
+                        </div>
+                        <div class="stats-label">Standard</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safari Packages Grid -->
+            {% if safaris %}
+            <div class="row">
+                {% for safari in safaris %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="safari-card">
+                        <div class="position-relative">
+                            <img src="{{ url_for('static', filename='uploads/' + safari.image_url) if safari.image_url else url_for('static', filename='images/default-safari.jpg') }}"
+                                 class="safari-image" alt="{{ safari.name }}">
+                            <span class="tier-badge {{ safari.tier.lower() }}">{{ safari.tier }}</span>
+                        </div>
+
+                        <div class="p-3">
+                            <h5 class="fw-bold mb-2">{{ safari.name }}</h5>
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-calendar-alt me-1"></i>{{ safari.duration }}<br>
+                                <i class="fas fa-car me-1"></i>{{ safari.safari_count }} Safaris
+                            </p>
+
+                            {% if safari.description %}
+                            <p class="mb-2 small">{{ safari.description[:80] }}...</p>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="fw-bold text-success fs-5">₹ {{ "{:,.0f}".format(safari.price) }}</span>
+                                <small class="text-muted">{{ safari.created_at.strftime('%d %b %Y') }}</small>
+                            </div>
+
+                            <div class="action-buttons">
+                                <a href="#" class="btn btn-sm btn-outline-primary edit-safari-btn"
+                                   data-id="{{ safari.id }}"
+                                   data-name="{{ safari.name }}"
+                                   data-description="{{ safari.description or '' }}"
+                                   data-price="{{ safari.price }}"
+                                   data-duration="{{ safari.duration }}"
+                                   data-safari_count="{{ safari.safari_count }}"
+                                   data-tier="{{ safari.tier }}"
+                                   data-image_url="{{ safari.image_url }}">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger delete-safari-btn"
+                                        data-id="{{ safari.id }}"
+                                        data-name="{{ safari.name }}">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-binoculars"></i>
+                </div>
+                <h3 class="text-muted mb-3">No Safari Packages Yet</h3>
+                <p class="text-muted mb-4">Add your first safari package to start offering wildlife adventures.</p>
+                <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#addSafariModal">
+                    <i class="fas fa-plus-circle me-2"></i>Create First Safari
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Safari Modal -->
+<div class="modal fade" id="addSafariModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-white">Add New Safari Package</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addSafariForm" method="POST" action="{{ url_for('add_safari') }}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="form-section">
+                        <h6 class="fw-bold mb-3">Basic Information</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Safari Name *</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Package Tier *</label>
+                                <select class="form-select" name="tier" required>
+                                    <option value="">Select Tier</option>
+                                    <option value="Premium">Premium</option>
+                                    <option value="Economical">Economical</option>
+                                    <option value="Standard">Standard</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Duration *</label>
+                                <input type="text" class="form-control" name="duration"
+                                       placeholder="e.g., 1 Nights, 2 Days" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Number of Safaris *</label>
+                                <input type="number" class="form-control" name="safari_count" min="1" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Price (₹) *</label>
+                                <input type="number" class="form-control" name="price" step="0.01" min="0" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" name="description" rows="3" placeholder="Describe the safari experience..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="fw-bold mb-3">Image Upload</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Safari Image</label>
+                            <input type="file" class="form-control" name="image" accept="image/*" id="safariImageInput">
+                            <div class="form-text">Recommended size: 800x600px. Max 2MB.</div>
+                        </div>
+                        <div class="image-preview mb-3 text-center">
+                            <img id="safariImagePreview" src="#" alt="Preview" style="max-width: 200px; display: none; border-radius: 8px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Safari</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Safari Modal -->
+<div class="modal fade" id="editSafariModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-white">Edit Safari Package</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editSafariForm" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" id="editSafariId" name="id">
+
+                    <div class="form-section">
+                        <h6 class="fw-bold mb-3">Basic Information</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Safari Name *</label>
+                                <input type="text" class="form-control" id="editSafariName" name="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Package Tier *</label>
+                                <select class="form-select" id="editSafariTier" name="tier" required>
+                                    <option value="">Select Tier</option>
+                                    <option value="Premium">Premium</option>
+                                    <option value="Economical">Economical</option>
+                                    <option value="Standard">Standard</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Duration *</label>
+                                <input type="text" class="form-control" id="editSafariDuration" name="duration" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Number of Safaris *</label>
+                                <input type="number" class="form-control" id="editSafariCount" name="safari_count" min="1" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Price (₹) *</label>
+                                <input type="number" class="form-control" id="editSafariPrice" name="price" step="0.01" min="0" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="editSafariDescription" name="description" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="fw-bold mb-3">Image</h6>
+                        <div class="mb-3">
+                            <div id="currentSafariImage" class="mb-3"></div>
+                            <label class="form-label">Update Image (Optional)</label>
+                            <input type="file" class="form-control" name="image" accept="image/*">
+                            <div class="form-text">Leave empty to keep current image</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Update Safari</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteSafariModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-white">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteSafariName"></strong>?</p>
+                <p class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>This action cannot be undone!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteSafari">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let deleteSafariId = null;
+
+    // Image preview for add modal
+    $('#safariImageInput').change(function(e) {
+        const input = this;
+        const preview = $('#safariImagePreview');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.attr('src', e.target.result).show();
+            }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.hide();
+        }
+    });
+
+    // Edit button click
+    $('.edit-safari-btn').click(function(e) {
+        e.preventDefault();
+
+        const safariId = $(this).data('id');
+        const safariName = $(this).data('name');
+        const safariDescription = $(this).data('description');
+        const safariPrice = $(this).data('price');
+        const safariDuration = $(this).data('duration');
+        const safariCount = $(this).data('safari_count');
+        const safariTier = $(this).data('tier');
+        const safariImage = $(this).data('image_url');
+
+        // Populate form fields
+        $('#editSafariId').val(safariId);
+        $('#editSafariName').val(safariName);
+        $('#editSafariDescription').val(safariDescription || '');
+        $('#editSafariPrice').val(safariPrice);
+        $('#editSafariDuration').val(safariDuration);
+        $('#editSafariCount').val(safariCount);
+        $('#editSafariTier').val(safariTier);
+
+        // Set form action
+        $('#editSafariForm').attr('action', `/admin/safari/edit/${safariId}`);
+
+        // Show current image if exists
+        let imageHtml = '';
+        if (safariImage) {
+            imageHtml = `<img src="/static/uploads/${safariImage}" alt="${safariName}" style="max-width: 200px; border-radius: 5px;" class="mb-2">`;
+        } else {
+            imageHtml = '<p class="text-muted">No image uploaded</p>';
+        }
+        $('#currentSafariImage').html(imageHtml);
+
+        // Show modal
+        $('#editSafariModal').modal('show');
+    });
+
+    // Delete button click
+    $('.delete-safari-btn').click(function() {
+        deleteSafariId = $(this).data('id');
+        const safariName = $(this).data('name');
+        $('#deleteSafariName').text(safariName);
+        $('#deleteSafariModal').modal('show');
+    });
+
+    // Confirm delete
+    $('#confirmDeleteSafari').click(function() {
+        if (!deleteSafariId) return;
+
+        $.ajax({
+            url: `/admin/safari/delete/${deleteSafariId}`,
+            type: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    showAlert(response.message, 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert(response.message, 'danger');
+                }
+            },
+            error: function(xhr) {
+                showAlert('Error deleting safari', 'danger');
+            }
+        });
+
+        $('#deleteSafariModal').modal('hide');
+    });
+
+    // Form validation
+    $('#addSafariForm, #editSafariForm').submit(function(e) {
+        const price = $(this).find('input[name="price"]').val();
+        const safariCount = $(this).find('input[name="safari_count"]').val();
+
+        if (parseFloat(price) <= 0) {
+            e.preventDefault();
+            showAlert('Price must be greater than 0', 'danger');
+            return false;
+        }
+
+        if (parseInt(safariCount) < 1) {
+            e.preventDefault();
+            showAlert('Number of safaris must be at least 1', 'danger');
+            return false;
+        }
+
+        return true;
+    });
+
+    function showAlert(message, type) {
+        const alertDiv = $(`
+            <div class="alert alert-${type} alert-dismissible fade show"
+                 style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+
+        $('body').append(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.alert('close');
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

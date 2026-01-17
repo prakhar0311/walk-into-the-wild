@@ -1,0 +1,291 @@
+<!-- templates/cart/order_summary.html -->
+{% extends "base.html" %}
+
+{% block title %}Order Confirmation - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .confirmation-container {
+        padding: 60px 0;
+        min-height: 80vh;
+        background: linear-gradient(135deg, #f8fff8 0%, #f5f5f5 100%);
+    }
+
+    .confirmation-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        text-align: center;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .confirmation-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #1a472a 0%, #2e7d32 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin: 0 auto 30px;
+    }
+
+    .order-details {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 25px;
+        margin: 30px 0;
+        text-align: left;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .item-list {
+        max-height: 200px;
+        overflow-y: auto;
+        margin: 15px 0;
+        padding-right: 10px;
+    }
+
+    .item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #1a472a;
+    }
+
+    .timeline-step {
+        position: relative;
+        padding-left: 50px;
+        margin-bottom: 30px;
+    }
+
+    .timeline-step:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-icon {
+        position: absolute;
+        left: 10px;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid #1a472a;
+    }
+
+    .timeline-step.active .timeline-icon {
+        background: #1a472a;
+    }
+
+    .whatsapp-btn {
+        background: #25D366;
+        color: white;
+        border: none;
+    }
+
+    .whatsapp-btn:hover {
+        background: #1da851;
+        color: white;
+    }
+
+    .print-btn {
+        border: 1px solid #1a472a;
+        color: #1a472a;
+    }
+
+    .print-btn:hover {
+        background: #1a472a;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirmation-container">
+    <div class="container">
+        <div class="confirmation-card">
+            <div class="confirmation-icon">
+                <i class="fas fa-check"></i>
+            </div>
+
+            <h1 class="display-6 fw-bold text-success mb-3">Order Confirmed!</h1>
+            <p class="lead text-muted mb-4">
+                Thank you for your order. Your order number is
+                <strong class="text-dark">#{{ order.id }}</strong>
+            </p>
+
+            <div class="order-details">
+                <h5 class="fw-bold mb-4">Order Details</h5>
+
+                <div class="detail-row">
+                    <span class="text-muted">Order ID:</span>
+                    <span class="fw-bold">#{{ order.id }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="text-muted">Date:</span>
+                    <span>{{ order.created_at.strftime('%d %B, %Y %I:%M %p') }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="text-muted">Payment Status:</span>
+                    <span class="badge bg-{{ 'success' if order.payment_status == 'completed' else 'warning' }}">
+                        {{ order.payment_status|title }}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="text-muted">Payment Method:</span>
+                    <span>{{ order.payment_method|default('Card', true)|title }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="text-muted">Total Amount:</span>
+                    <span class="fw-bold text-success fs-5">₹ {{ "{:,.2f}".format(order.total_amount) }}</span>
+                </div>
+            </div>
+
+            <div class="order-details">
+                <h5 class="fw-bold mb-4">Order Items</h5>
+
+                <div class="item-list">
+                    {% for item in items %}
+                    <div class="item-row">
+                        <div>
+                            <h6 class="mb-1">
+                                {% if item.order_item.product_type == 'wildlife' %}
+                                    {{ item.product.title if item.product else 'Wildlife Item' }}
+                                {% else %}
+                                    {{ item.product.name if item.product else 'Safari Package' }}
+                                {% endif %}
+                            </h6>
+                            <small class="text-muted">Qty: {{ item.order_item.quantity }}</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-success">₹ {{ "{:,.2f}".format(item.order_item.price * item.order_item.quantity) }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="order-details">
+                <h5 class="fw-bold mb-4">Shipping Address</h5>
+                <p class="mb-2">{{ order.shipping_address|default('Not specified', true) }}</p>
+                <p class="mb-0 text-muted">
+                    {{ order.shipping_city|default('', true) }}{% if order.shipping_state %}, {{ order.shipping_state }}{% endif %}
+                    {% if order.shipping_pincode %} - {{ order.shipping_pincode }}{% endif %}
+                </p>
+            </div>
+
+            <div class="mt-4">
+                <h5 class="fw-bold mb-3">Order Timeline</h5>
+                <div class="timeline">
+                    <div class="timeline-step active">
+                        <div class="timeline-icon"></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Order Placed</h6>
+                            <p class="text-muted small mb-0">Order confirmed and processing</p>
+                        </div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="timeline-icon"></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Payment Processing</h6>
+                            <p class="text-muted small mb-0">Verifying payment details</p>
+                        </div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="timeline-icon"></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Order Processing</h6>
+                            <p class="text-muted small mb-0">Preparing your order</p>
+                        </div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="timeline-icon"></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Completed</h6>
+                            <p class="text-muted small mb-0">Order delivered successfully</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-3 d-md-flex justify-content-md-center mt-5">
+                <a href="{{ url_for('index') }}" class="btn btn-success px-4">
+                    <i class="fas fa-home me-2"></i>Continue Shopping
+                </a>
+                <a href="#" class="btn print-btn px-4" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>Print Invoice
+                </a>
+                <a href="https://wa.me/?text=My%20Order%20ID:%20{{ order.id }}%20-%20Walk%20Into%20The%20Wild"
+                   class="btn whatsapp-btn px-4" target="_blank">
+                    <i class="fab fa-whatsapp me-2"></i>Share on WhatsApp
+                </a>
+            </div>
+
+            <div class="mt-4">
+                <p class="text-muted small mb-0">
+                    <i class="fas fa-envelope me-1"></i>
+                    An order confirmation has been sent to your email.
+                </p>
+                <p class="text-muted small">
+                    <i class="fas fa-headset me-1"></i>
+                    Need help? <a href="{{ url_for('contact') }}" class="text-success">Contact Support</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Animate timeline
+    let step = 0;
+    const timelineSteps = $('.timeline-step');
+
+    function animateTimeline() {
+        if (step < timelineSteps.length) {
+            $(timelineSteps[step]).addClass('active');
+            step++;
+            setTimeout(animateTimeline, 500);
+        }
+    }
+
+    setTimeout(animateTimeline, 1000);
+
+    // Update cart count to zero
+    $('#cartCount').text('0');
+});
+</script>
+{% endblock %}

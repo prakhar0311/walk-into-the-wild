@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Wildlife - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        margin-top: 20px;
+    }
+
+    .sidebar {
+        background: linear-gradient(180deg, #1a472a 0%, #2e7d32 100%);
+        min-height: calc(100vh - 76px);
+        padding: 0;
+        color: white;
+    }
+
+    .form-container {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .current-image {
+        max-width: 300px;
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid admin-container">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar d-md-block">
+            <div class="sidebar-header">
+                <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Admin Panel</h4>
+                <small class="text-white-50">{{ current_user.email }}</small>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('manage_wildlife') }}">
+                            <i class="fas fa-paw me-2"></i>Manage Wildlife
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('manage_safaris') }}">
+                            <i class="fas fa-binoculars me-2"></i>Manage Safaris
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a class="nav-link text-warning" href="{{ url_for('index') }}">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Site
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 ms-sm-auto px-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2 text-dark">Edit Wildlife: {{ wildlife.title }}</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('manage_wildlife') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                    </a>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="form-container">
+                <form method="POST" action="{{ url_for('edit_wildlife', id=wildlife.id) }}" enctype="multipart/form-data" id="editWildlifeForm">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-4">
+                                <label for="title" class="form-label">Wildlife Name *</label>
+                                <input type="text" class="form-control" id="title" name="title" value="{{ wildlife.title }}" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="description" class="form-label">Description *</label>
+                                <textarea class="form-control" id="description" name="description" rows="5" required>{{ wildlife.description }}</textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="category" class="form-label">Category *</label>
+                                    <select class="form-select" id="category" name="category" required>
+                                        <option value="Big Cats" {% if wildlife.category == 'Big Cats' %}selected{% endif %}>Big Cats</option>
+                                        <option value="Bears" {% if wildlife.category == 'Bears' %}selected{% endif %}>Bears</option>
+                                        <option value="Primates" {% if wildlife.category == 'Primates' %}selected{% endif %}>Primates</option>
+                                        <option value="Birds" {% if wildlife.category == 'Birds' %}selected{% endif %}>Birds</option>
+                                        <option value="Reptiles" {% if wildlife.category == 'Reptiles' %}selected{% endif %}>Reptiles</option>
+                                        <option value="Marine" {% if wildlife.category == 'Marine' %}selected{% endif %}>Marine</option>
+                                        <option value="Endangered" {% if wildlife.category == 'Endangered' %}selected{% endif %}>Endangered</option>
+                                        <option value="Other" {% if wildlife.category == 'Other' %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 mb-4">
+                                    <label for="price" class="form-label">Price (₹) *</label>
+                                    <input type="number" class="form-control" id="price" name="price" value="{{ wildlife.price }}" step="0.01" min="0" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" class="form-control" id="location" name="location" value="{{ wildlife.location or '' }}">
+                                </div>
+
+                                <div class="col-md-6 mb-4">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="Available" {% if wildlife.status == 'Available' %}selected{% endif %}>Available</option>
+                                        <option value="Unavailable" {% if wildlife.status == 'Unavailable' %}selected{% endif %}>Unavailable</option>
+                                        <option value="Rare" {% if wildlife.status == 'Rare' %}selected{% endif %}>Rare</option>
+                                        <option value="Endangered" {% if wildlife.status == 'Endangered' %}selected{% endif %}>Endangered</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Current Image</label>
+                                {% if wildlife.image_url %}
+                                <img src="{{ url_for('static', filename='uploads/' + wildlife.image_url) }}"
+                                     class="current-image img-fluid" alt="{{ wildlife.title }}">
+                                {% else %}
+                                <div class="text-muted">No image uploaded</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="image" class="form-label">Update Image (Optional)</label>
+                                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                <div class="form-text">Leave empty to keep current image</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('manage_wildlife') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Update Wildlife
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#editWildlifeForm').submit(function(e) {
+        const price = $('#price').val();
+        if (parseFloat(price) <= 0) {
+            e.preventDefault();
+            alert('Price must be greater than 0');
+            return false;
+        }
+        return true;
+    });
+});
+</script>
+{% endblock %}

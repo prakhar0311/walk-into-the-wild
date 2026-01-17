@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Safari Packages - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .safari-container {
+        padding: 40px 0;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #1a472a 0%, #2e7d32 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 40px;
+        border-radius: 0 0 20px 20px;
+    }
+
+    .safari-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 15px;
+        overflow: hidden;
+        transition: all 0.3s;
+        margin-bottom: 30px;
+        height: 100%;
+    }
+
+    .safari-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    .safari-image {
+        height: 250px;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .tier-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 8px 20px;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .premium { background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; }
+    .economical { background: linear-gradient(45deg, #4CAF50, #2E7D32); color: white; }
+    .standard { background: linear-gradient(45deg, #2196F3, #0D47A1); color: white; }
+
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .features-list li {
+        padding: 5px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .features-list li:last-child {
+        border-bottom: none;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold mb-3">Safari Packages</h1>
+                <p class="lead mb-0">Discover the best wildlife adventures across India</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="safari-container">
+    <div class="container">
+        {% if safaris %}
+        <div class="row">
+            {% for safari in safaris %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card safari-card">
+                    <div class="position-relative">
+                        <img src="{{ url_for('static', filename='uploads/' + safari.image_url) if safari.image_url else url_for('static', filename='images/default-safari.jpg') }}"
+                             class="safari-image" alt="{{ safari.name }}">
+                        <span class="tier-badge {{ safari.tier.lower() }}">{{ safari.tier }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <h4 class="card-title fw-bold mb-3">{{ safari.name }}</h4>
+
+                        {% if safari.description %}
+                        <p class="card-text text-muted mb-4">{{ safari.description }}</p>
+                        {% endif %}
+
+                        <ul class="features-list mb-4">
+                            <li>
+                                <i class="fas fa-calendar-alt text-success me-2"></i>
+                                <strong>Duration:</strong> {{ safari.duration }}
+                            </li>
+                            <li>
+                                <i class="fas fa-car text-success me-2"></i>
+                                <strong>Safaris:</strong> {{ safari.safari_count }} sessions
+                            </li>
+                            <li>
+                                <i class="fas fa-tag text-success me-2"></i>
+                                <strong>Tier:</strong> {{ safari.tier }}
+                            </li>
+                        </ul>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="price-display">
+                                <small class="text-muted">Starting from</small>
+                                <h3 class="fw-bold text-success mb-0">₹ {{ "{:,.0f}".format(safari.price) }}</h3>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            {% if current_user.is_authenticated %}
+                            <button class="btn btn-success add-to-cart"
+                                    data-id="{{ safari.id }}"
+                                    data-type="safari">
+                                <i class="fas fa-cart-plus me-2"></i>Book Now
+                            </button>
+                            {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-success">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login to Book
+                            </a>
+                            {% endif %}
+                            <a href="#" class="btn btn-outline-success">
+                                <i class="fas fa-info-circle me-2"></i>More Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-binoculars"></i>
+            </div>
+            <h3 class="text-muted mb-3">No Safari Packages Available</h3>
+            <p class="text-muted mb-4">Check back soon for exciting safari adventures.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-success">
+                <i class="fas fa-arrow-left me-2"></i>Back to Home
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('.add-to-cart').click(function() {
+        const productId = $(this).data('id');
+        const productType = $(this).data('type');
+
+        $.ajax({
+            url: '{{ url_for("add_to_cart") }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                product_id: productId,
+                product_type: productType
+            }),
+            success: function(response) {
+                if (response.success) {
+                    $('#cartCount').text(response.cart_count);
+
+                    // Show success message
+                    const alertDiv = $(`
+                        <div class="alert alert-success alert-dismissible fade show"
+                             style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+                            Safari package added to cart!
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    `);
+
+                    $('body').append(alertDiv);
+                    setTimeout(() => alertDiv.alert('close'), 3000);
+                }
+            },
+            error: function(xhr) {
+                if (xhr.status === 401) {
+                    window.location.href = '{{ url_for("login") }}';
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

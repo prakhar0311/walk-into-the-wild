@@ -1,0 +1,435 @@
+<!-- templates/cart/checkout.html -->
+{% extends "base.html" %}
+
+{% block title %}Checkout - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-container {
+        padding: 40px 0;
+        min-height: 70vh;
+    }
+
+    .checkout-step {
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+    }
+
+    .step-number.active {
+        background: linear-gradient(135deg, #1a472a 0%, #2e7d32 100%);
+        color: white;
+    }
+
+    .step-info {
+        flex: 1;
+    }
+
+    .checkout-form {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .form-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .order-summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .payment-method {
+        border: 2px solid #eee;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .payment-method:hover {
+        border-color: #1a472a;
+        background: #f8fff8;
+    }
+
+    .payment-method.selected {
+        border-color: #1a472a;
+        background: #f8fff8;
+    }
+
+    .payment-icon {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+
+    .card-element {
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: white;
+    }
+
+    .order-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .order-item:last-child {
+        border-bottom: none;
+    }
+
+    .order-item-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 5px;
+        margin-right: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-6 fw-bold text-dark">Checkout</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('view_cart') }}">Cart</a></li>
+                        <li class="breadcrumb-item active">Checkout</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column: Form -->
+            <div class="col-lg-8">
+                <div class="checkout-step">
+                    <div class="step-number active">1</div>
+                    <div class="step-info">
+                        <h5 class="fw-bold mb-1">Shipping Information</h5>
+                        <p class="text-muted mb-0">Enter your delivery details</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('checkout') }}" class="checkout-form">
+                    <div class="form-section">
+                        <h5 class="fw-bold mb-4">Contact Information</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-control" name="full_name"
+                                       value="{{ current_user.email.split('@')[0] if current_user.is_authenticated else '' }}"
+                                       required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-control" name="email"
+                                       value="{{ current_user.email if current_user.is_authenticated else '' }}"
+                                       required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="phone" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h5 class="fw-bold mb-4">Shipping Address</h5>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Address Line 1</label>
+                                <input type="text" class="form-control" name="address" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Address Line 2 (Optional)</label>
+                                <input type="text" class="form-control" name="address2">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" name="city" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">State</label>
+                                <select class="form-select" name="state" required>
+                                    <option value="">Select State</option>
+                                    <option>Delhi</option>
+                                    <option>Maharashtra</option>
+                                    <option>Karnataka</option>
+                                    <option>Tamil Nadu</option>
+                                    <option>Uttar Pradesh</option>
+                                    <option>Rajasthan</option>
+                                    <option>Madhya Pradesh</option>
+                                    <option>West Bengal</option>
+                                    <option>Gujarat</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">PIN Code</label>
+                                <input type="text" class="form-control" name="pincode" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="checkout-step">
+                            <div class="step-number">2</div>
+                            <div class="step-info">
+                                <h5 class="fw-bold mb-1">Payment Method</h5>
+                                <p class="text-muted mb-0">Select your preferred payment method</p>
+                            </div>
+                        </div>
+
+                        <div class="payment-method selected" onclick="selectPayment('card')">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method"
+                                       id="card" value="card" checked>
+                                <label class="form-check-label d-flex align-items-center" for="card">
+                                    <i class="fab fa-cc-visa payment-icon text-primary"></i>
+                                    <i class="fab fa-cc-mastercard payment-icon text-danger"></i>
+                                    <span>Credit/Debit Card</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="payment-method" onclick="selectPayment('paypal')">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method"
+                                       id="paypal" value="paypal">
+                                <label class="form-check-label d-flex align-items-center" for="paypal">
+                                    <i class="fab fa-cc-paypal payment-icon text-primary"></i>
+                                    <span>PayPal</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="payment-method" onclick="selectPayment('upi')">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method"
+                                       id="upi" value="upi">
+                                <label class="form-check-label d-flex align-items-center" for="upi">
+                                    <i class="fas fa-mobile-alt payment-icon text-success"></i>
+                                    <span>UPI / Net Banking</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="payment-method" onclick="selectPayment('cod')">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method"
+                                       id="cod" value="cod">
+                                <label class="form-check-label d-flex align-items-center" for="cod">
+                                    <i class="fas fa-money-bill-alt payment-icon text-success"></i>
+                                    <span>Cash on Delivery</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Card Details (Only show when card is selected) -->
+                        <div id="cardDetails" class="mt-4">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Card Number</label>
+                                    <div class="card-element">
+                                        <input type="text" class="form-control" placeholder="1234 5678 9012 3456">
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Expiry Date</label>
+                                    <div class="card-element">
+                                        <input type="text" class="form-control" placeholder="MM/YY">
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">CVV</label>
+                                    <div class="card-element">
+                                        <input type="text" class="form-control" placeholder="123">
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Name on Card</label>
+                                    <div class="card-element">
+                                        <input type="text" class="form-control" placeholder="John Doe">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('view_cart') }}" class="btn btn-outline-dark">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg px-5">
+                            <i class="fas fa-lock me-2"></i>Place Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right Column: Order Summary -->
+            <div class="col-lg-4">
+                <div class="sticky-top" style="top: 100px;">
+                    <div class="checkout-step">
+                        <div class="step-number">3</div>
+                        <div class="step-info">
+                            <h5 class="fw-bold mb-1">Order Summary</h5>
+                            <p class="text-muted mb-0">Review your order</p>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Order Items ({{ items|length }})</h6>
+
+                            {% for item in items %}
+                            <div class="order-item">
+                                <img src="{{ url_for('static', filename='uploads/' + item.product.image_url) if item.product.image_url else (url_for('static', filename='images/default-wildlife.jpg') if item.cart_item.product_type == 'wildlife' else url_for('static', filename='images/default-safari.jpg')) }}"
+                                     class="order-item-image"
+                                     alt="{{ item.product.title if item.cart_item.product_type == 'wildlife' else item.product.name }}">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        {% if item.cart_item.product_type == 'wildlife' %}
+                                            {{ item.product.title }}
+                                        {% else %}
+                                            {{ item.product.name }}
+                                        {% endif %}
+                                    </h6>
+                                    <small class="text-muted">Qty: {{ item.cart_item.quantity }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-success">₹ {{ "{:,.2f}".format(item.total) }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            <hr class="my-3">
+
+                            <div class="order-summary-item">
+                                <span>Subtotal</span>
+                                <span>₹ {{ "{:,.2f}".format(total) }}</span>
+                            </div>
+                            <div class="order-summary-item">
+                                <span>Shipping</span>
+                                <span class="text-success">FREE</span>
+                            </div>
+                            <div class="order-summary-item">
+                                <span>Tax (18%)</span>
+                                <span>₹ {{ "{:,.2f}".format(total * 0.18) }}</span>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="order-summary-item fw-bold fs-5">
+                                <span>Total</span>
+                                <span class="text-success">₹ {{ "{:,.2f}".format(total * 1.18) }}</span>
+                            </div>
+
+                            <div class="mt-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="terms" required>
+                                    <label class="form-check-label small" for="terms">
+                                        I agree to the <a href="#" class="text-success">Terms & Conditions</a> and <a href="#" class="text-success">Privacy Policy</a>
+                                    </label>
+                                </div>
+
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="newsletter">
+                                    <label class="form-check-label small" for="newsletter">
+                                        Subscribe to our newsletter for wildlife updates
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm mt-3">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3"><i class="fas fa-shield-alt me-2 text-success"></i>Secure Checkout</h6>
+                            <ul class="small text-muted mb-0">
+                                <li>Your payment information is encrypted</li>
+                                <li>We don't store your card details</li>
+                                <li>100% satisfaction guarantee</li>
+                                <li>24/7 customer support</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectPayment(method) {
+    // Update UI
+    $('.payment-method').removeClass('selected');
+    $(`#${method}`).closest('.payment-method').addClass('selected');
+    $(`#${method}`).prop('checked', true);
+
+    // Show/hide card details
+    if (method === 'card') {
+        $('#cardDetails').show();
+    } else {
+        $('#cardDetails').hide();
+    }
+}
+
+$(document).ready(function() {
+    // Initialize
+    selectPayment('card');
+
+    // Form validation
+    $('form').submit(function(e) {
+        if (!$('#terms').is(':checked')) {
+            e.preventDefault();
+            showAlert('Please agree to the Terms & Conditions', 'warning');
+        }
+    });
+});
+
+function showAlert(message, type) {
+    const alertDiv = $(`
+        <div class="alert alert-${type} alert-dismissible fade show"
+             style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `);
+
+    $('body').append(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.alert('close');
+    }, 3000);
+}
+</script>
+{% endblock %}

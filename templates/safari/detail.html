@@ -1,0 +1,400 @@
+<!-- templates/safari/detail.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ safari.name }} - Safari Details - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .safari-detail-container {
+        padding: 40px 0;
+        min-height: 70vh;
+    }
+
+    .safari-hero {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                    url('{{ url_for("static", filename="uploads/" + safari.image_url) if safari.image_url else url_for("static", filename="images/default-safari.jpg") }}') center/cover no-repeat;
+        height: 400px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+    .safari-hero-content {
+        padding: 30px;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 10px;
+        max-width: 800px;
+    }
+
+    .tier-badge-large {
+        padding: 10px 25px;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+        display: inline-block;
+    }
+
+    .premium { background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; }
+    .economical { background: linear-gradient(45deg, #4CAF50, #2E7D32); color: white; }
+    .standard { background: linear-gradient(45deg, #2196F3, #0D47A1); color: white; }
+
+    .detail-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .price-display {
+        background: linear-gradient(135deg, #f8fff8 0%, #f0f9f0 100%);
+        border-radius: 10px;
+        padding: 25px;
+        text-align: center;
+        border: 2px solid #1a472a;
+    }
+
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .features-list li {
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+    }
+
+    .features-list li:last-child {
+        border-bottom: none;
+    }
+
+    .feature-icon {
+        font-size: 1.2rem;
+        color: #1a472a;
+        margin-right: 15px;
+        width: 25px;
+        text-align: center;
+    }
+
+    .similar-safari-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s;
+        height: 100%;
+    }
+
+    .similar-safari-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .booking-form {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 25px;
+    }
+
+    .included-features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .feature-badge {
+        background: #e8f5e9;
+        color: #1a472a;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="safari-detail-container">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('safari_packages') }}">Safari Deals</a></li>
+                <li class="breadcrumb-item active">{{ safari.name }}</li>
+            </ol>
+        </nav>
+
+        <!-- Safari Hero Section -->
+        <div class="safari-hero">
+            <div class="safari-hero-content">
+                <span class="tier-badge-large {{ safari.tier.lower() }}">{{ safari.tier }}</span>
+                <h1 class="display-5 fw-bold mb-3">{{ safari.name }}</h1>
+                <p class="lead mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>{{ safari.duration }} •
+                    <i class="fas fa-car me-2 ms-3"></i>{{ safari.safari_count }} Safari Sessions
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column: Safari Details -->
+            <div class="col-lg-8">
+                <div class="detail-card">
+                    <h3 class="fw-bold mb-4">Package Overview</h3>
+
+                    {% if safari.description %}
+                    <div class="mb-4">
+                        <p class="lead" style="line-height: 1.8;">{{ safari.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-3">Package Features</h5>
+                        <ul class="features-list">
+                            <li>
+                                <i class="fas fa-calendar-check feature-icon"></i>
+                                <div>
+                                    <strong>Duration:</strong> {{ safari.duration }}
+                                </div>
+                            </li>
+                            <li>
+                                <i class="fas fa-car feature-icon"></i>
+                                <div>
+                                    <strong>Number of Safaris:</strong> {{ safari.safari_count }} guided safari sessions
+                                </div>
+                            </li>
+                            <li>
+                                <i class="fas fa-user-shield feature-icon"></i>
+                                <div>
+                                    <strong>Experience Level:</strong> {{ safari.tier }} Package
+                                </div>
+                            </li>
+                            <li>
+                                <i class="fas fa-clock feature-icon"></i>
+                                <div>
+                                    <strong>Best Time to Visit:</strong> Year-round availability
+                                </div>
+                            </li>
+                            <li>
+                                <i class="fas fa-users feature-icon"></i>
+                                <div>
+                                    <strong>Group Size:</strong> Small groups (4-8 people)
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-3">What's Included</h5>
+                        <div class="included-features">
+                            <span class="feature-badge">
+                                <i class="fas fa-check-circle"></i> Accommodation
+                            </span>
+                            <span class="feature-badge">
+                                <i class="fas fa-check-circle"></i> All Meals
+                            </span>
+                            <span class="feature-badge">
+                                <i class="fas fa-check-circle"></i> Safari Vehicle
+                            </span>
+                            <span class="feature-badge">
+                                <i class="fas fa-check-circle"></i> Expert Guide
+                            </span>
+                            <span class="feature-badge">
+                                <i class="fas fa-check-circle"></i> Park Entry Fees
+                            </span>
+                            <span class="feature-badge">
+                                <i class="fas fa-check-circle"></i> Photography Assistance
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-3">Important Information</h5>
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Booking Terms</h6>
+                            <ul class="mb-0 small">
+                                <li>50% advance payment required for booking confirmation</li>
+                                <li>Free cancellation up to 7 days before the safari date</li>
+                                <li>Children under 12 get 30% discount</li>
+                                <li>All safaris are subject to weather conditions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Booking & Price -->
+            <div class="col-lg-4">
+                <div class="price-display mb-4">
+                    <h5 class="fw-bold mb-3">Package Price</h5>
+                    <div class="display-4 fw-bold text-success mb-2">₹ {{ "{:,.0f}".format(safari.price) }}</div>
+                    <p class="text-muted mb-3">Per person (all inclusive)</p>
+
+                    {% if current_user.is_authenticated %}
+                    <button class="btn btn-success btn-lg w-100 mb-3 add-to-cart"
+                            data-id="{{ safari.id }}"
+                            data-type="safari">
+                        <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                    </button>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-success btn-lg w-100 mb-3">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login to Book
+                    </a>
+                    {% endif %}
+
+                    <div class="booking-form">
+                        <h6 class="fw-bold mb-3">Quick Booking</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Select Date</label>
+                            <input type="date" class="form-control" min="{{ today }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Number of Persons</label>
+                            <select class="form-select">
+                                <option value="1">1 Person</option>
+                                <option value="2">2 Persons</option>
+                                <option value="3">3 Persons</option>
+                                <option value="4">4 Persons</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-outline-success w-100" onclick="showBookingModal()">
+                            <i class="fas fa-calendar-check me-2"></i>Check Availability
+                        </button>
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <h5 class="fw-bold mb-3">Need Help?</h5>
+                    <p class="text-muted mb-3">Our wildlife experts are here to assist you</p>
+                    <div class="d-grid gap-2">
+                        <a href="tel:+919876543210" class="btn btn-outline-primary">
+                            <i class="fas fa-phone me-2"></i>Call Us
+                        </a>
+                        <a href="{{ url_for('contact') }}" class="btn btn-outline-success">
+                            <i class="fas fa-envelope me-2"></i>Email Inquiry
+                        </a>
+                        <a href="{{ url_for('safari_packages') }}" class="btn btn-outline-dark">
+                            <i class="fas fa-arrow-left me-2"></i>View All Safaris
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Similar Safaris -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3 class="fw-bold mb-4">Similar Safari Packages</h3>
+                <div class="row">
+                    {% for similar_safari in similar_safaris %}
+                    <div class="col-md-4 mb-4">
+                        <div class="similar-safari-card">
+                            <img src="{{ url_for('static', filename='uploads/' + similar_safari.image_url) if similar_safari.image_url else url_for('static', filename='images/default-safari.jpg') }}"
+                                 class="card-img-top" alt="{{ similar_safari.name }}" style="height: 200px; object-fit: cover;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ similar_safari.name }}</h5>
+                                <p class="card-text text-muted small">
+                                    <i class="fas fa-calendar-alt me-1"></i>{{ similar_safari.duration }}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-success">₹ {{ "{:,.0f}".format(similar_safari.price) }}</span>
+                                    <a href="{{ url_for('safari_detail', id=similar_safari.id) }}" class="btn btn-sm btn-outline-success">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center text-muted py-4">
+                        <p>No similar safaris found</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Check Availability</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Availability check feature would be implemented here.</p>
+                <p>This would connect to a booking system to check real-time availability.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set today's date as minimum for date picker
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[type="date"]').min = today;
+
+    function showBookingModal() {
+        $('#bookingModal').modal('show');
+    }
+
+    $(document).ready(function() {
+        $('.add-to-cart').click(function() {
+            const productId = $(this).data('id');
+            const productType = $(this).data('type');
+
+            $.ajax({
+                url: '{{ url_for("add_to_cart") }}',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    product_id: productId,
+                    product_type: productType
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#cartCount').text(response.cart_count);
+
+                        // Show success message
+                        const alertDiv = $(`
+                            <div class="alert alert-success alert-dismissible fade show"
+                                 style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+                                Safari package added to cart!
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        `);
+
+                        $('body').append(alertDiv);
+                        setTimeout(() => alertDiv.alert('close'), 3000);
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) {
+                        window.location.href = '{{ url_for("login") }}';
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

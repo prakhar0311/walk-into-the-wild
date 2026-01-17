@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Wildlife Gallery - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .gallery-container {
+        padding: 40px 0;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #1a472a 0%, #2e7d32 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 40px;
+        border-radius: 0 0 20px 20px;
+    }
+
+    .filter-buttons {
+        margin-bottom: 30px;
+    }
+
+    .filter-btn {
+        margin: 0 5px 10px;
+        border-radius: 25px;
+        padding: 8px 20px;
+        transition: all 0.3s;
+    }
+
+    .filter-btn.active {
+        background: #1a472a;
+        color: white;
+    }
+
+    .wildlife-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        transition: all 0.3s;
+        margin-bottom: 30px;
+        height: 100%;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .wildlife-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    .card-img-top {
+        height: 250px;
+        object-fit: cover;
+        transition: transform 0.5s;
+    }
+
+    .wildlife-card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .category-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.85rem;
+    }
+
+    .empty-gallery {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold mb-3">Wildlife Gallery</h1>
+                <p class="lead mb-0">Discover India's incredible biodiversity</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="gallery-container">
+    <div class="container">
+        <!-- Filter Buttons -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="filter-buttons text-center">
+                    <button class="btn btn-outline-success filter-btn active" data-filter="all">All</button>
+                    <button class="btn btn-outline-success filter-btn" data-filter="Big Cats">Big Cats</button>
+                    <button class="btn btn-outline-success filter-btn" data-filter="Bears">Bears</button>
+                    <button class="btn btn-outline-success filter-btn" data-filter="Primates">Primates</button>
+                    <button class="btn btn-outline-success filter-btn" data-filter="Birds">Birds</button>
+                    <button class="btn btn-outline-success filter-btn" data-filter="Endangered">Endangered</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wildlife Grid -->
+        {% if wildlife %}
+        <div class="row" id="wildlifeGrid">
+            {% for animal in wildlife %}
+            <div class="col-md-4 col-lg-3 wildlife-item" data-category="{{ animal.category }}">
+                <div class="card wildlife-card">
+                    <div class="position-relative">
+                        <img src="{{ url_for('static', filename='uploads/' + animal.image_url) if animal.image_url else url_for('static', filename='images/default-wildlife.jpg') }}"
+                             class="card-img-top" alt="{{ animal.title }}">
+                        <span class="category-badge bg-success">{{ animal.category }}</span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">{{ animal.title }}</h5>
+                        <p class="card-text text-muted small">{{ animal.description[:100] }}...</p>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            {% if animal.location %}
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ animal.location }}
+                            </span>
+                            {% endif %}
+                            <span class="fw-bold text-success">₹ {{ "{:,.0f}".format(animal.price) }}</span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('wildlife_detail', id=animal.id) }}" class="btn btn-outline-success">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                            {% if current_user.is_authenticated %}
+                            <button class="btn btn-success add-to-cart"
+                                    data-id="{{ animal.id }}"
+                                    data-type="wildlife">
+                                <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                            </button>
+                            {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-success">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login to Purchase
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-gallery">
+            <div class="empty-icon">
+                <i class="fas fa-paw"></i>
+            </div>
+            <h3 class="text-muted mb-3">No Wildlife Found</h3>
+            <p class="text-muted mb-4">Check back soon for new wildlife entries.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-success">
+                <i class="fas fa-arrow-left me-2"></i>Back to Home
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Filter functionality
+    $('.filter-btn').click(function() {
+        const filter = $(this).data('filter');
+
+        // Update active button
+        $('.filter-btn').removeClass('active');
+        $(this).addClass('active');
+
+        // Filter items
+        if (filter === 'all') {
+            $('.wildlife-item').show();
+        } else {
+            $('.wildlife-item').hide();
+            $(`.wildlife-item[data-category="${filter}"]`).show();
+        }
+    });
+
+    // Add to cart functionality
+    $('.add-to-cart').click(function() {
+        const productId = $(this).data('id');
+        const productType = $(this).data('type');
+
+        $.ajax({
+            url: '{{ url_for("add_to_cart") }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                product_id: productId,
+                product_type: productType
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // Update cart count
+                    $('#cartCount').text(response.cart_count);
+
+                    // Show success message
+                    showAlert('Added to cart successfully!', 'success');
+
+                    // Update button state
+                    $(`.add-to-cart[data-id="${productId}"]`)
+                        .html('<i class="fas fa-check me-1"></i>Added')
+                        .prop('disabled', true)
+                        .removeClass('btn-success')
+                        .addClass('btn-secondary');
+                }
+            },
+            error: function(xhr) {
+                if (xhr.status === 401) {
+                    showAlert('Please login to add items to cart', 'warning');
+                } else {
+                    showAlert('Error adding to cart', 'danger');
+                }
+            }
+        });
+    });
+
+    function showAlert(message, type) {
+        const alertDiv = $(`
+            <div class="alert alert-${type} alert-dismissible fade show"
+                 style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+
+        $('body').append(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.alert('close');
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

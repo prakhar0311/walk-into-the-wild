@@ -1,0 +1,324 @@
+<!-- templates/admin/dashboard.html -->
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        margin-top: 20px;
+    }
+
+    .sidebar {
+        background: linear-gradient(180deg, #1a472a 0%, #2e7d32 100%);
+        min-height: calc(100vh - 76px);
+        padding: 0;
+        color: white;
+    }
+
+    .sidebar-header {
+        padding: 30px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+    }
+
+    .sidebar-nav {
+        padding: 20px 0;
+    }
+
+    .sidebar-nav .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+        padding: 12px 20px;
+        border-left: 3px solid transparent;
+        transition: all 0.3s;
+    }
+
+    .sidebar-nav .nav-link:hover,
+    .sidebar-nav .nav-link.active {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+        border-left-color: #4CAF50;
+    }
+
+    .sidebar-nav .nav-link i {
+        width: 25px;
+        text-align: center;
+    }
+
+    .stats-card {
+        border-radius: 10px;
+        border: none;
+        transition: transform 0.3s;
+        height: 100%;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stats-icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+
+    .card-wildlife { border-left: 4px solid #4CAF50; }
+    .card-safari { border-left: 4px solid #2196F3; }
+    .card-orders { border-left: 4px solid #FF9800; }
+    .card-users { border-left: 4px solid #9C27B0; }
+
+    .recent-orders {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .order-status {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+
+    .status-pending { background: #FFF3CD; color: #856404; }
+    .status-completed { background: #D4EDDA; color: #155724; }
+    .status-failed { background: #F8D7DA; color: #721C24; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid admin-container">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar d-md-block">
+            <div class="sidebar-header">
+                <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Admin Panel</h4>
+                <small class="text-white-50">{{ current_user.email }}</small>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin_dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('manage_wildlife') }}">
+                            <i class="fas fa-paw me-2"></i>Manage Wildlife
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('manage_safaris') }}">
+                            <i class="fas fa-binoculars me-2"></i>Manage Safaris
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-shopping-cart me-2"></i>Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-users me-2"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-cog me-2"></i>Settings
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a class="nav-link text-warning" href="{{ url_for('index') }}">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Site
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 ms-sm-auto px-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2 text-dark">Dashboard Overview</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <span class="text-muted me-3">{{ date.strftime('%B %d, %Y') }}</span>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3 col-sm-6">
+                    <div class="card stats-card card-wildlife shadow-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h6 class="text-muted mb-1">Wildlife</h6>
+                                    <h2 class="mb-0">{{ stats.total_wildlife }}</h2>
+                                    <small class="text-success">+2 this week</small>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <i class="fas fa-paw stats-icon text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6">
+                    <div class="card stats-card card-safari shadow-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h6 class="text-muted mb-1">Safari Packages</h6>
+                                    <h2 class="mb-0">{{ stats.total_safaris }}</h2>
+                                    <small class="text-primary">All active</small>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <i class="fas fa-binoculars stats-icon text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6">
+                    <div class="card stats-card card-orders shadow-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h6 class="text-muted mb-1">Total Orders</h6>
+                                    <h2 class="mb-0">{{ stats.total_orders }}</h2>
+                                    <small class="text-warning">₹ 1,24,500 revenue</small>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <i class="fas fa-shopping-cart stats-icon text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6">
+                    <div class="card stats-card card-users shadow-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h6 class="text-muted mb-1">Users</h6>
+                                    <h2 class="mb-0">{{ stats.total_users }}</h2>
+                                    <small class="text-purple">+5 today</small>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <i class="fas fa-users stats-icon text-purple"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Orders</h5>
+                        </div>
+                        <div class="card-body recent-orders">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in stats.recent_orders %}
+                                        <tr>
+                                            <td>#{{ order.id }}</td>
+                                            <td>User {{ order.user_id }}</td>
+                                            <td>{{ order.created_at.strftime('%d %b, %Y') }}</td>
+                                            <td class="fw-bold">₹ {{ "{:,.2f}".format(order.total_amount) }}</td>
+                                            <td>
+                                                <span class="order-status status-{{ order.payment_status }}">
+                                                    {{ order.payment_status|title }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                No orders yet
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <a href="{{ url_for('add_wildlife') }}" class="btn btn-success w-100 py-3">
+                                        <i class="fas fa-plus-circle me-2"></i>Add Wildlife
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="#" class="btn btn-primary w-100 py-3">
+                                        <i class="fas fa-plus-circle me-2"></i>Add Safari
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="#" class="btn btn-warning w-100 py-3">
+                                        <i class="fas fa-file-invoice me-2"></i>View Reports
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="#" class="btn btn-dark w-100 py-3">
+                                        <i class="fas fa-user-plus me-2"></i>Add Admin
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-update date
+    function updateDate() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        $('.current-date').text(now.toLocaleDateString('en-US', options));
+    }
+
+    updateDate();
+    setInterval(updateDate, 60000); // Update every minute
+});
+</script>
+{% endblock %}

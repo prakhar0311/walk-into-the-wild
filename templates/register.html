@@ -1,0 +1,418 @@
+<!-- templates/register.html -->
+{% extends "base.html" %}
+
+{% block title %}Register - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 0;
+        background: linear-gradient(135deg, #f5f5f5 0%, #e8f5e8 100%);
+    }
+
+    .register-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .register-header {
+        background: linear-gradient(135deg, #1a472a 0%, #2e7d32 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+        position: relative;
+    }
+
+    .register-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #4CAF50, #8BC34A, #CDDC39);
+    }
+
+    .register-body {
+        padding: 30px;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: #1a472a;
+        box-shadow: 0 0 0 0.2rem rgba(26, 71, 42, 0.25);
+    }
+
+    .password-strength {
+        height: 5px;
+        background: #eee;
+        border-radius: 3px;
+        margin-top: 5px;
+        overflow: hidden;
+    }
+
+    .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s;
+        border-radius: 3px;
+    }
+
+    .strength-weak { background: #ff4757; }
+    .strength-fair { background: #ffa502; }
+    .strength-good { background: #2ed573; }
+    .strength-strong { background: #1a472a; }
+
+    .password-requirements {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .requirement {
+        margin-bottom: 3px;
+    }
+
+    .requirement.met {
+        color: #2e7d32;
+    }
+
+    .requirement.met::before {
+        content: '✓ ';
+        font-weight: bold;
+    }
+
+    .requirement.unmet {
+        color: #757575;
+    }
+
+    .requirement.unmet::before {
+        content: '○ ';
+    }
+
+    .btn-register {
+        background: linear-gradient(135deg, #1a472a 0%, #2e7d32 100%);
+        border: none;
+        padding: 12px;
+        font-weight: 600;
+        border-radius: 8px;
+        width: 100%;
+        transition: all 0.3s;
+    }
+
+    .btn-register:hover {
+        background: linear-gradient(135deg, #0d3b1e 0%, #1b5e20 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(26, 71, 42, 0.3);
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+
+    .terms-text {
+        font-size: 0.85rem;
+        color: #666;
+        text-align: center;
+        margin-top: 15px;
+    }
+
+    .wildlife-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .input-group-text {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+    }
+
+    .password-toggle {
+        cursor: pointer;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-left: none;
+    }
+
+    .password-toggle:hover {
+        background: #e9ecef;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-header">
+            <i class="fas fa-paw wildlife-icon"></i>
+            <h2 class="h3 mb-2">Create Your Account</h2>
+            <p class="mb-0">Join our wildlife community today</p>
+        </div>
+
+        <div class="register-body">
+            <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="mb-4">
+                    <label for="email" class="form-label fw-bold">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        <input type="email" class="form-control" id="email" name="email"
+                               placeholder="Enter your email address" required
+                               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                    </div>
+                    <div class="form-text">We'll never share your email with anyone else.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-bold">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password"
+                               placeholder="Create a strong password" required
+                               minlength="8">
+                        <span class="input-group-text password-toggle" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
+
+                    <div class="password-strength mt-2">
+                        <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                    </div>
+
+                    <div class="password-requirements mt-2" id="passwordRequirements">
+                        <div class="requirement unmet" id="reqLength">At least 8 characters</div>
+                        <div class="requirement unmet" id="reqUppercase">At least one uppercase letter</div>
+                        <div class="requirement unmet" id="reqLowercase">At least one lowercase letter</div>
+                        <div class="requirement unmet" id="reqNumber">At least one number</div>
+                        <div class="requirement unmet" id="reqSpecial">At least one special character</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="confirm_password" class="form-label fw-bold">Confirm Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control" id="confirm_password"
+                               name="confirm_password" placeholder="Confirm your password" required>
+                        <span class="input-group-text password-toggle" id="toggleConfirmPassword">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                    <div class="form-text" id="passwordMatchText"></div>
+                </div>
+
+                <div class="mb-4 form-check">
+                    <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                    <label class="form-check-label" for="terms">
+                        I agree to the <a href="#" class="text-success fw-bold">Terms of Service</a> and <a href="#" class="text-success fw-bold">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <div class="mb-4 form-check">
+                    <input type="checkbox" class="form-check-input" id="newsletter" name="newsletter" checked>
+                    <label class="form-check-label" for="newsletter">
+                        Subscribe to our wildlife newsletter for updates and offers
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-register mb-3" id="submitBtn">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </button>
+
+                <div class="login-link">
+                    <p class="mb-0">Already have an account?
+                        <a href="{{ url_for('login') }}" class="text-success fw-bold">Sign in here</a>
+                    </p>
+                </div>
+
+                <div class="terms-text">
+                    By registering, you confirm that you're 18+ years old and agree to receive emails from Walk Into The Wild.
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Toggle password visibility
+    $('#togglePassword').click(function() {
+        const passwordInput = $('#password');
+        const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
+        passwordInput.attr('type', type);
+        $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+    });
+
+    $('#toggleConfirmPassword').click(function() {
+        const confirmInput = $('#confirm_password');
+        const type = confirmInput.attr('type') === 'password' ? 'text' : 'password';
+        confirmInput.attr('type', type);
+        $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+    });
+
+    // Password strength checker
+    $('#password').on('input', function() {
+        const password = $(this).val();
+        checkPasswordStrength(password);
+        checkPasswordMatch();
+    });
+
+    // Confirm password checker
+    $('#confirm_password').on('input', checkPasswordMatch);
+
+    // Form submission validation
+    $('#registerForm').submit(function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+            return false;
+        }
+        return true;
+    });
+
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        const requirements = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[^A-Za-z0-9]/.test(password)
+        };
+
+        // Update requirement indicators
+        $('#reqLength').toggleClass('met unmet', requirements.length);
+        $('#reqUppercase').toggleClass('met unmet', requirements.uppercase);
+        $('#reqLowercase').toggleClass('met unmet', requirements.lowercase);
+        $('#reqNumber').toggleClass('met unmet', requirements.number);
+        $('#reqSpecial').toggleClass('met unmet', requirements.special);
+
+        // Calculate strength score
+        Object.values(requirements).forEach(req => {
+            if (req) strength++;
+        });
+
+        // Update strength bar
+        const strengthBar = $('#passwordStrengthBar');
+        let strengthClass = '';
+
+        if (strength === 0) {
+            strengthBar.css('width', '0%');
+        } else if (strength <= 2) {
+            strengthBar.css('width', '25%').removeClass().addClass('password-strength-bar strength-weak');
+        } else if (strength <= 3) {
+            strengthBar.css('width', '50%').removeClass().addClass('password-strength-bar strength-fair');
+        } else if (strength <= 4) {
+            strengthBar.css('width', '75%').removeClass().addClass('password-strength-bar strength-good');
+        } else {
+            strengthBar.css('width', '100%').removeClass().addClass('password-strength-bar strength-strong');
+        }
+    }
+
+    function checkPasswordMatch() {
+        const password = $('#password').val();
+        const confirmPassword = $('#confirm_password').val();
+        const matchText = $('#passwordMatchText');
+
+        if (confirmPassword === '') {
+            matchText.text('').removeClass('text-success text-danger');
+            return false;
+        }
+
+        if (password === confirmPassword) {
+            matchText.text('Passwords match!').removeClass('text-danger').addClass('text-success');
+            return true;
+        } else {
+            matchText.text('Passwords do not match').removeClass('text-success').addClass('text-danger');
+            return false;
+        }
+    }
+
+    function validateForm() {
+        const email = $('#email').val();
+        const password = $('#password').val();
+        const confirmPassword = $('#confirm_password').val();
+        const terms = $('#terms').is(':checked');
+
+        let isValid = true;
+
+        // Email validation
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            showAlert('Please enter a valid email address', 'danger');
+            isValid = false;
+        }
+
+        // Password length
+        if (password.length < 8) {
+            showAlert('Password must be at least 8 characters long', 'danger');
+            isValid = false;
+        }
+
+        // Password match
+        if (password !== confirmPassword) {
+            showAlert('Passwords do not match', 'danger');
+            isValid = false;
+        }
+
+        // Terms agreement
+        if (!terms) {
+            showAlert('You must agree to the Terms of Service', 'danger');
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    function showAlert(message, type) {
+        // Remove existing alerts
+        $('.alert-dismissible').remove();
+
+        const alertDiv = $(`
+            <div class="alert alert-${type} alert-dismissible fade show"
+                 style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+
+        $('body').append(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.alert('close');
+        }, 5000);
+    }
+
+    // Initialize password strength check
+    checkPasswordStrength($('#password').val());
+});
+</script>
+{% endblock %}

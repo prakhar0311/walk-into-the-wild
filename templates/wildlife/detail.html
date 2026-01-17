@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}{{ animal.title }} - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        padding: 40px 0;
+        min-height: 70vh;
+    }
+    
+    .wildlife-image {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .detail-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        height: 100%;
+    }
+    
+    .category-badge {
+        padding: 8px 20px;
+        border-radius: 25px;
+        font-weight: bold;
+    }
+    
+    .status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+    
+    .status-available { background: #D4EDDA; color: #155724; }
+    .status-unavailable { background: #F8D7DA; color: #721C24; }
+    .status-rare { background: #FFF3CD; color: #856404; }
+    .status-endangered { background: #D1ECF1; color: #0C5460; }
+    
+    .price-tag {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #1a472a;
+    }
+    
+    .feature-icon {
+        font-size: 1.5rem;
+        color: #1a472a;
+        margin-right: 10px;
+    }
+    
+    .similar-card {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s;
+    }
+    
+    .similar-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('wildlife_gallery') }}">Wildlife</a></li>
+                <li class="breadcrumb-item active">{{ animal.title }}</li>
+            </ol>
+        </nav>
+        
+        <div class="row">
+            <!-- Image Column -->
+            <div class="col-lg-6 mb-4">
+                <img src="{{ url_for('static', filename='uploads/' + animal.image_url) if animal.image_url else url_for('static', filename='images/default-wildlife.jpg') }}" 
+                     class="wildlife-image" alt="{{ animal.title }}">
+            </div>
+            
+            <!-- Details Column -->
+            <div class="col-lg-6 mb-4">
+                <div class="detail-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h1 class="fw-bold mb-2">{{ animal.title }}</h1>
+                            <div class="mb-3">
+                                <span class="category-badge bg-success">{{ animal.category }}</span>
+                                <span class="status-badge status-{{ animal.status.lower() }} ms-2">
+                                    {{ animal.status }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="price-tag">₹ {{ "{:,.0f}".format(animal.price) }}</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-3">Description</h5>
+                        <p class="text-muted" style="line-height: 1.8;">{{ animal.description }}</p>
+                    </div>
+                    
+                    {% if animal.location %}
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-3">
+                            <i class="fas fa-map-marker-alt feature-icon"></i>Location
+                        </h5>
+                        <p class="text-muted">{{ animal.location }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-3">
+                            <i class="fas fa-info-circle feature-icon"></i>Details
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <strong>Category:</strong> {{ animal.category }}
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>Status:</strong> {{ animal.status }}
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>Added:</strong> {{ animal.created_at.strftime('%d %B, %Y') }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        {% if current_user.is_authenticated %}
+                        <div class="d-grid gap-3">
+                            <button class="btn btn-success btn-lg add-to-cart" 
+                                    data-id="{{ animal.id }}" 
+                                    data-type="wildlife">
+                                <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                            </button>
+                            <a href="{{ url_for('view_cart') }}" class="btn btn-outline-success btn-lg">
+                                <i class="fas fa-shopping-cart me-2"></i>View Cart
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="d-grid gap-3">
+                            <a href="{{ url_for('login') }}" class="btn btn-success btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login to Purchase
+                            </a>
+                            <a href="{{ url_for('register') }}" class="btn btn-outline-success btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Similar Wildlife -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3 class="fw-bold mb-4">Similar Wildlife</h3>
+                <div class="row">
+                    {% for similar_animal in similar_animals %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card similar-card h-100">
+                            <img src="{{ url_for('static', filename='uploads/' + similar_animal.image_url) if similar_animal.image_url else url_for('static', filename='images/default-wildlife.jpg') }}" 
+                                 class="card-img-top" alt="{{ similar_animal.title }}" style="height: 200px; object-fit: cover;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ similar_animal.title }}</h5>
+                                <p class="card-text text-muted small">{{ similar_animal.description[:80] }}...</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-success">₹ {{ "{:,.0f}".format(similar_animal.price) }}</span>
+                                    <a href="{{ url_for('wildlife_detail', id=similar_animal.id) }}" class="btn btn-sm btn-outline-success">
+                                        View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center text-muted py-4">
+                        <p>No similar wildlife found</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('.add-to-cart').click(function() {
+        const productId = $(this).data('id');
+        const productType = $(this).data('type');
+        
+        $.ajax({
+            url: '{{ url_for("add_to_cart") }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                product_id: productId,
+                product_type: productType
+            }),
+            success: function(response) {
+                if (response.success) {
+                    $('#cartCount').text(response.cart_count);
+                    
+                    // Show success message
+                    const alertDiv = $(`
+                        <div class="alert alert-success alert-dismissible fade show" 
+                             style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+                            Added to cart successfully!
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    `);
+                    
+                    $('body').append(alertDiv);
+                    setTimeout(() => alertDiv.alert('close'), 3000);
+                    
+                    // Update button
+                    $('.add-to-cart').html('<i class="fas fa-check me-2"></i>Added').prop('disabled', true);
+                }
+            },
+            error: function(xhr) {
+                if (xhr.status === 401) {
+                    window.location.href = '{{ url_for("login") }}';
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

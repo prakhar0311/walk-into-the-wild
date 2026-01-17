@@ -1,0 +1,307 @@
+<!-- templates/admin/manage_wildlife.html -->
+{% extends "base.html" %}
+
+{% block title %}Manage Wildlife - Walk Into The Wild{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        margin-top: 20px;
+    }
+
+    .sidebar {
+        background: linear-gradient(180deg, #1a472a 0%, #2e7d32 100%);
+        min-height: calc(100vh - 76px);
+        padding: 0;
+        color: white;
+    }
+
+    .sidebar-header {
+        padding: 30px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+    }
+
+    .sidebar-nav {
+        padding: 20px 0;
+    }
+
+    .sidebar-nav .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+        padding: 12px 20px;
+        border-left: 3px solid transparent;
+        transition: all 0.3s;
+    }
+
+    .sidebar-nav .nav-link:hover,
+    .sidebar-nav .nav-link.active {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+        border-left-color: #4CAF50;
+    }
+
+    .sidebar-nav .nav-link i {
+        width: 25px;
+        text-align: center;
+    }
+
+    .action-buttons .btn {
+        padding: 5px 10px;
+        font-size: 0.85rem;
+    }
+
+    .wildlife-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+
+    .status-badge {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+
+    .status-available { background: #D4EDDA; color: #155724; }
+    .status-unavailable { background: #F8D7DA; color: #721C24; }
+
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #1a472a 0%, #2e7d32 100%);
+        color: white;
+        border-radius: 10px 10px 0 0 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid admin-container">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar d-md-block">
+            <div class="sidebar-header">
+                <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Admin Panel</h4>
+                <small class="text-white-50">{{ current_user.email }}</small>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('manage_wildlife') }}">
+                            <i class="fas fa-paw me-2"></i>Manage Wildlife
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('manage_safaris') }}">
+                            <i class="fas fa-binoculars me-2"></i>Manage Safaris
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-shopping-cart me-2"></i>Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-users me-2"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a class="nav-link text-warning" href="{{ url_for('index') }}">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Site
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 ms-sm-auto px-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2 text-dark">Manage Wildlife</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('add_wildlife') }}" class="btn btn-success">
+                        <i class="fas fa-plus-circle me-2"></i>Add New Wildlife
+                    </a>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Wildlife Table -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">All Wildlife Entries</h5>
+                    <span class="badge bg-success">{{ wildlife|length }} entries</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Location</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for animal in wildlife %}
+                                <tr>
+                                    <td>
+                                        <img src="{{ url_for('static', filename='uploads/' + animal.image_url) if animal.image_url else url_for('static', filename='images/default-wildlife.jpg') }}"
+                                             class="wildlife-image" alt="{{ animal.title }}">
+                                    </td>
+                                    <td>
+                                        <strong>{{ animal.title }}</strong><br>
+                                        <small class="text-muted">{{ animal.description[:50] }}...</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ animal.category }}</span>
+                                    </td>
+                                    <td>{{ animal.location }}</td>
+                                    <td class="fw-bold text-success">₹ {{ "{:,.2f}".format(animal.price) }}</td>
+                                    <td>
+                                        <span class="status-badge status-{{ animal.status.lower() }}">
+                                            {{ animal.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>{{ animal.created_at.strftime('%d %b, %Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{{ url_for('edit_wildlife', id=animal.id) }}"
+                                               class="btn btn-sm btn-outline-primary mb-1">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ url_for('wildlife_detail', id=animal.id) }}"
+                                               class="btn btn-sm btn-outline-info mb-1" target="_blank">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-danger delete-btn mb-1"
+                                                    data-id="{{ animal.id }}"
+                                                    data-title="{{ animal.title }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        No wildlife entries found.
+                                        <a href="{{ url_for('add_wildlife') }}">Add your first wildlife entry</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-white">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteTitle"></strong>?</p>
+                <p class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>This action cannot be undone!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let deleteId = null;
+
+    // Delete button click
+    $('.delete-btn').click(function() {
+        deleteId = $(this).data('id');
+        const title = $(this).data('title');
+        $('#deleteTitle').text(title);
+        $('#deleteModal').modal('show');
+    });
+
+    // Confirm delete
+    $('#confirmDelete').click(function() {
+        if (!deleteId) return;
+
+        $.ajax({
+            url: '{{ url_for("delete_wildlife", id=0) }}'.replace('0', deleteId),
+            type: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    showAlert(response.message, 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert(response.message, 'danger');
+                }
+            },
+            error: function(xhr) {
+                showAlert('Error deleting wildlife entry', 'danger');
+            }
+        });
+
+        $('#deleteModal').modal('hide');
+    });
+
+    function showAlert(message, type) {
+        const alertDiv = $(`
+            <div class="alert alert-${type} alert-dismissible fade show"
+                 style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+
+        $('body').append(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.alert('close');
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}
